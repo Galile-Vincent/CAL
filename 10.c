@@ -26,28 +26,27 @@ int main() {
 
   char bank_get[30];
   int total = 0;
-
+  int money;
   // Read the bank and money , break when EOF
-  while (scanf("%s", bank_get) != EOF) {
-    int money = 0;
-    if (scanf("%d", &money) == EOF) break;
+  while (scanf("%s %d", bank_get, &money) == 2) {
     strcpy(bank[count].bank_name, bank_get);
     bank[count].money = money;
     total += money;
     count++;
-  }
+}
+
 
   if (total < goal) {
-    printf("Not enough!");
+    printf("Not enough! 1");
     return 0;
   }
   // Break if there is no input 
   if (count == 0) {
-    printf("Not enough!");
+    printf("Not enough! 2");
     return 0;
   }
   if (max_ammount == 0 && goal != 0) {
-    printf("Not enough!");
+    printf("Not enough! 3");
     return 0;
   }
   if (goal == 0) {
@@ -89,14 +88,20 @@ int main() {
     bank[i].money = borrow;
     bank_needed++;
 
-    if (sum >= goal) break;
+    if (sum >= total) break;
+  }
+
+  if (bank_needed > max_ammount) {
+    printf("Not enough! 4");
+    return 0;
   }
 
   // Situation when the goal is not met
-  if (sum < goal) {
-    printf("Not enough!");
+  if (total < goal) {
+    printf("Not enough! 5");
     return 0;
   }
+
 
   printf("%d\n", bank_needed);
   for (int i = 0; i < bank_needed; i++) {
