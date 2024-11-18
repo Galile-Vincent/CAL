@@ -66,3 +66,10 @@ int main() {
   }
   return 0;
 }
+
+/*
+        City_name[diff] Money_mon[diff] diff
+A 100 ->   A                 100      0
+A 200 ->   A                 300      0
+B 200 ->   B                          1   
+*/
