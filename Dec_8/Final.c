@@ -3,10 +3,10 @@
 #include <string.h>
 #include <stdlib.h>
 typedef enum Suit {
-  SPADES = 832, 
-  HEARTS = 574, 
-  DIAMONDS = 456, 
-  CLUBS = 192 
+  SPADES = 832,
+  HEARTS = 574,
+  DIAMONDS = 456,
+  CLUBS = 192
 } Suit;
 
 typedef enum Face {
@@ -56,34 +56,34 @@ void GetTextType(int rank, char arr[50]) {
     case 10:
       strcpy(arr, "full house");
       break;
-    case 9: 
+    case 9:
       strcpy(arr, "straight flush");
       break;
-    case 8: 
+    case 8:
       strcpy(arr, "four of a kind");
       break;
-    case 7: 
+    case 7:
       strcpy(arr, "full house");
       break;
-    case 6: 
+    case 6:
       strcpy(arr, "flush");
       break;
-    case 5: 
+    case 5:
       strcpy(arr, "straight");
       break;
-    case 4: 
+    case 4:
       strcpy(arr, "three of a kind");
       break;
-    case 3: 
+    case 3:
       strcpy(arr, "two pairs");
       break;
-    case 2: 
+    case 2:
       strcpy(arr, "one pair");
       break;
-    case 1: 
+    case 1:
       strcpy(arr, "zilch");
       break;
-    default: 
+    default:
       strcpy(arr, "Unknown Type");
       break;
   }
@@ -103,7 +103,7 @@ int GetHandRank(Hand hand) {
 }
 void GetCardString(Card card, char card_arr[100]) {
   char suits[4][10] = {"Spades", "Hearts", "Diamonds", "Clubs"};
-    
+
   char faces[13][10] = {"Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven",
       "Eight", "Nine", "Ten", "Jack", "Queen", "King" };
 
@@ -217,47 +217,89 @@ void Print(Hand hand1, int rank1, Hand hand2, int rank2) {
     GetCardString(FindLargest(hand2), card2);
   }
 
+  if (rank1 == 3 && rank2 == 3) {
+    int face1_1, face1_2, face2_1, face2_2;
+    face1_1 = hand1[0].face;
+    face1_2 = hand1[1].face;
+    face2_1 = hand2[0].face;
+    face2_2 = hand2[1].face;
+    if (face1_1 > face2_1) {
+      printf("%s (%s) wins over %s (%s).",
+          rank1_type, card1, rank2_type, card2);
+    }
+
+    else if (face1_1 < face2_1) {
+      printf("%s (%s) loses to %s (%s).",
+          rank1_type, card1, rank2_type, card2);
+    }
+
+    else if (face1_1 == face2_1) {
+      if (face1_2 > face2_2) {
+        printf("%s (%s) wins over %s (%s).",
+            rank1_type, card1, rank2_type, card2);
+      }
+
+      else if (face1_2 < face2_2) {
+        printf("%s (%s) loses to %s (%s).",
+            rank1_type, card1, rank2_type, card2);
+      }
+
+      else if (face1_2 == face2_2) {
+        if (BiggerThan(FindLargest(hand1), FindLargest(hand2))) {
+          printf("%s (%s) wins over %s (%s).",
+              rank1_type, card1, rank2_type, card2);
+        }
+
+        else if (BiggerThan(FindLargest(hand2), FindLargest(hand1))) {
+          printf("%s (%s) loses to %s (%s).",
+              rank1_type, card1, rank2_type, card2);
+        }
+      }
+
+    }
+  }
+
   // Compare ranks and determine the winner.
-  if (rank1 > rank2) {
-    printf("%s (%s) wins over %s (%s).", rank1_type, 
+  else if (rank1 > rank2) {
+    printf("%s (%s) wins over %s (%s).", rank1_type,
         card1, rank2_type, card2);
   } else if (rank1 < rank2) {
-    printf("%s (%s) loses to %s (%s).", rank1_type, 
+    printf("%s (%s) loses to %s (%s).", rank1_type,
         card1, rank2_type, card2);
   } else {
     // If ranks are equal, compare the largest cards.
     if (BiggerThan(FindLargest(hand1), FindLargest(hand2))) {
-      printf("%s (%s) wins over %s (%s).", rank1_type, 
+      printf("%s (%s) wins over %s (%s).", rank1_type,
           card1, rank2_type, card2);
     } else if (BiggerThan(FindLargest(hand2), FindLargest(hand1))) {
-      printf("%s (%s) loses to %s (%s).", rank1_type, 
+      printf("%s (%s) loses to %s (%s).", rank1_type,
           card1, rank2_type, card2);
     } else {
       // Handle tie cases based on rank type.
       if (rank1 == 3) { // Tie in pairs.
         if (BiggerThan(hand1[0], hand2[0])) {
-          printf("%s (%s) wins over %s (%s).", rank1_type, 
+          printf("%s (%s) wins over %s (%s).", rank1_type,
               card1, rank2_type, card2);
         } else if (BiggerThan(hand2[0], hand1[0])) {
-          printf("%s (%s) loses to %s (%s).", rank1_type, 
+          printf("%s (%s) loses to %s (%s).", rank1_type,
               card1, rank2_type, card2);
         } else {
-          printf("It's a tie with pairs: %s (%s) and %s (%s).", rank1_type, 
+          printf("It's a tie with pairs: %s (%s) and %s (%s).", rank1_type,
               card1, rank2_type, card2);
         }
       } else if (rank1 == 2) { // Tie in single cards.
         if (BiggerThan(hand1[0], hand2[0])) {
-          printf("%s (%s) wins over %s (%s).", rank1_type, 
+          printf("%s (%s) wins over %s (%s).", rank1_type,
               card1, rank2_type, card2);
         } else if (BiggerThan(hand2[0], hand1[0])) {
-          printf("%s (%s) loses to %s (%s).", rank1_type, 
+          printf("%s (%s) loses to %s (%s).", rank1_type,
               card1, rank2_type, card2);
         } else {
-          printf("It's a tie with single cards: %s (%s) and %s (%s).", 
+          printf("It's a tie with single cards: %s (%s) and %s (%s).",
               rank1_type, card1, rank2_type, card2);
         }
       } else { // Tie in high cards.
-        printf("It's a tie with high cards: %s (%s) and %s (%s).", 
+        printf("It's a tie with high cards: %s (%s) and %s (%s).",
             rank1_type, card1, rank2_type, card2);
       }
     }
@@ -290,7 +332,7 @@ int main() {
 
 void PrintCard(Card card) {
   char suits[4][10] = {"Spades", "Hearts", "Diamonds", "Clubs"};
-    
+
   char faces[13][10] = {"Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven",
       "Eight", "Nine", "Ten", "Jack", "Queen", "King" };
 
@@ -384,19 +426,19 @@ bool InputHand(Hand hand) {
     // Add suit
     int suit;
     switch (suit_char) {
-      case 'S': 
-        suit = SPADES; 
+      case 'S':
+        suit = SPADES;
         break;
-      case 'H': 
-        suit = HEARTS; 
+      case 'H':
+        suit = HEARTS;
         break;
-      case 'D': 
-        suit = DIAMONDS; 
+      case 'D':
+        suit = DIAMONDS;
         break;
-      case 'C': 
-        suit = CLUBS; 
+      case 'C':
+        suit = CLUBS;
         break;
-      default: 
+      default:
         return false;
     }
 
@@ -539,7 +581,7 @@ int Order(Face face) {
 int OrderSuit(Suit suit) {
   if (suit == DIAMONDS) return 1;
   else return suit;
-} 
+}
 
 bool BiggerThan(Card card1, Card card2) {
   int face1 = Order(card1.face);
