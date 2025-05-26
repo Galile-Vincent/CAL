@@ -1,6 +1,6 @@
 ## Two methods to write "Insert"
 
-### Method 1 (Best way)
+### Method 1 (Recommended way)
 #### Always insert above the current_line but when all insert stop current_line change to the previous. So in insert we only need to insert the element above current_line. 
 #### In here we didn't change current_line's element until the end. 
 <pre><code>
