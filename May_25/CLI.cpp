@@ -15,7 +15,7 @@ class Buffer {
   Buffer() {
   }
   bool Append(std::string input);
-  bool Insert(std::string input, bool is_init);
+  bool Insert(std::string input);
   bool Change(std::string input, bool is_init);
   void PrintLast();
   bool Delete();
@@ -86,30 +86,31 @@ void Operations(Buffer &buffer) {
         }
       }
     } else if (command == "i") {
-      bool is_init = false;
-      if (buffer.GetCurrent() == 0 && buffer.GetSize() == 0) {
-        is_init = true;
+      /*
+      if (buffer.GetCurrent() != 0) {
+        buffer.UpdateCur(buffer.GetCurrent() - 1);
       }
-      int count = 0;
       std::string input;
       while (std::getline(std::cin, input)) {
         if (input == ".") {
           break;
         } else {
-          if (count == 0) {
-            if (!buffer.Insert(input, is_init)) {
-              Error(INVALID_COMMAND);
-            } else {
-              count++;
-            }
-          } else {
-            if (!buffer.Append(input)) {
-              Error(INVALID_COMMAND);
-            }
+          if (!buffer.Insert(input)) {
+            Error(INVALID_COMMAND);
           }
         }
       }
-      // std::cout << "Current line: " << buffer.GetCurrent() << std::endl;
+      */
+      while (std::getline(std::cin, command)) {
+        if (command == ".") {
+          break;
+        } else {
+          if (!buffer.Insert(command, false)) {
+            Error(INVALID_COMMAND);
+          }
+        }
+      }
+      buffer.UpdateCur(buffer.GetCurrent() - 1);
     } else if (command == "p") {
       buffer.Print(false);
     } else if (command == "%p") {
@@ -163,7 +164,8 @@ bool Buffer::Append(std::string input) {
   return true;
 }
 
-bool Buffer::Insert(std::string input, bool is_init) {
+/*
+bool Buffer::Insert(std::string input) {
   if (input.empty()) {
     Error(INVALID_COMMAND);
     return false;
@@ -171,10 +173,21 @@ bool Buffer::Insert(std::string input, bool is_init) {
   if (contents.size() == 0) {
     return Append(input);
   }
-  if (!is_init) {
-    current_line--;
-  }
   contents.insert(contents.begin() + current_line, input);
+  current_line++;
+  return true;
+}
+*/
+
+bool Buffer::Insert(std::string input) {
+  if (input.empty()) {
+    Error(INVALID_COMMAND);
+    return false;
+  }
+  if (contents.size() == 0) { // Empty
+    return Append(input);
+  }
+  contents.insert(contents.begin() + current_line - 1, input);
   current_line++;
   return true;
 }
