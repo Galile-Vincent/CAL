@@ -19,9 +19,7 @@ Main:
 Insert:
     vector.insert(current_line - 1)
     current_line++;
-<code></pre>
-
-
+</code></pre>
 ***
 ### Method 2
 #### We insert element above the current_line in the first time. And change the current line into the elment that added. And after that we append new element under the current_line.
@@ -45,4 +43,4 @@ Main:
 Insert:
     vector.insert(current_line)
     current_line++;
-<code></pre>
+</code></pre>
