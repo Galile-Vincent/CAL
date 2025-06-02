@@ -1,0 +1,458 @@
+現在要製作的是一個進階版的line editor (我稱之為line editor pro)。
+
+之前「簡易版」line editor的功能只是各項「進階版」功能的簡化。 以a (add)為例，「進階版」的add功能可以有以下多種寫法：
+
+23a : 在第23行之下add lines
+.a 或a: 在「目前這一行」之下add lines
+$a : 在最後一行之下add lines
+在使用line editor pro時，使用者原則上應該要指明在「哪一行」操作，而.與$則分別代表著 "目前這一行" 與 "最後一行" 。 若使用者不說是哪一行(此即「簡易版」的做法)，預設是"目前這一行"，也就是說：a與.a是相同意義的指令。
+
+其他像i(insert)與c(change)也都是一樣，使用者原則上應該要說在「哪一行」之上insert lines或說把「哪一行」換掉。 若使用者不說是哪一行(即「簡易版」的做法)，預設就是在"目前這一行"之上insert lines或是把"目前這一行"換掉。
+
+ps. vector的insert()用法，要記得去看說明文件！可能會跟你想的不太一樣。
+
+指令	功能
+i或.i	在「目前這一行」之上add lines
+23i	在第23行之上add lines
+$i	在最後一行之上add lines
+.c或c	把「目前這一行」換成新的 lines
+23c	把第23行換成新的 lines
+$c	把最後一行換成新的 lines
+.d或d	把「目前這一行」刪除
+23d	把第23行刪除
+$d	把最後一行刪除
+.p或p	把「目前這一行」印出來
+23p	印第23行
+$p	印最後一行
+%p	印出全部內容
+line editor pro還多了切換與顯示「目前在哪一行」的功能。
+
+指令	功能
+23	把第23行設定為「目前這一行」，並印出那一行的內容(含line number)
+.	列印「目前這一行」是哪一行(含line number)
+最後，line editor pro有"增加與切換buffer"的功能。
+
+使用者一開始是在使用一個default buffer，其名字為"Buffer-0"，此buffer是使用者目前的「工作buffer」。使用者所下的任何line-editing指令都是針對這個目前的「工作buffer」而言。當然，使用者可以切換buffer，也可以產生新buffer或為buffer重新命名。以下是有關buffer的指令。
+
+指令
+功能
+b	印出目前的「工作buffer」的名字
+rb name	把目前的「工作buffer」的名字改為name (rb means "rename buffer")
+lb	把所有的buffer的名字依照buffer建立的順序列出來 (lb means "list buffers")
+cb name	切換到name這個buffer(以name這個buffer作為目前的「工作buffer」)，若無此buffer，就是error (cb means "change buffer")
+db	刪除目前的工作buffer。當目前的buffer被刪除後，接在其後產生的buffer就應該要優先「往前遞補」。若此buffer已經是唯一剩下的buffer，要視為錯誤，不能刪除。
+db name	刪除指定名字的buffer。當此buffer被刪除後，接在其後產生的buffer就應該要優先「往前遞補」。若無此名字的buffer，就是error；當名字正確但此buffer已經是唯一剩下的buffer，也要視為錯誤，不能刪除。
+nb	產生一個新的、由系統取名的buffer，並以它作為目前的「工作buffer」。(buffer之預設名稱是依"第幾次"產生的buffer的順序命名，e.g., 第五次產生的buffer其預設名稱為"Buffer-4"，不管前面幾次產生的buffer是否有被改名或是被刪除)
+nb name	產生一個新的、名叫'name'的buffer，並以它作為目前的「工作buffer」 (nb means "new buffer")。如果name已存在，要視為錯誤
+其他相關要求（與簡易版line editor相同）：
+
+當使用者要加入資料(a)時：
+若根本沒「目前這一行」，a就是"加入新內容"之意。
+在加完新的內容之後，「目前這一行」就是剛剛所加的最後一行。
+但是，若新的內容是空的，那「目前這一行」就維持不變（等於沒有新增到資料）。
+
+當使用者要插入資料(i)時：
+若根本沒「目前這一行」，i就是"加入新內容"之意。
+在加完新的內容之後，「目前這一行」就是剛剛所加的最後一行。
+但是，若新的內容是空的，那「目前這一行」就維持不變（理由同上）。
+
+當使用者要刪除資料(d)時：
+在刪除「目前這一行」之後，原先的「目前這一行」的下一行就"升格"成為「目前這一行」。（意思是，如果刪掉第22行，那原本的第23行就變成第22行）。但是，若原先的「目前這一行」已是全部內容的最後一行，那麼在刪除「目前這一行」之後，「目前這一行」就是更新後的內容的最後一行。如果原先的「目前這一行」是唯一的一行，那刪除後「目前這一行」就變成不存在（因為沒有內容了）
+
+當使用者要修改資料(c)時：
+在換新的內容之後，「目前這一行」就是剛剛所換"新內容"的最後一行。如果沒東西可以被修改，那應該要視為錯誤。若要更新的內容是空的，那c就跟d一樣（等於是刪除一行）
+
+結束程式(q)：結束程式的執行。
+
+什麼是錯誤的輸入？什麼是可接受的輸入？錯誤的訊息應該是什麼？
+
+使用者的輸入(只)有兩種：editing指令(e.g., $a or nb LetterToWang or 25d) 跟 內文
+
+line editor pro對editing指令採取比較"寬鬆"的態度。
+
+指令之前可以有white-spaces或是無效輸入，一個正確的指令之"後"(到該行的line-enter字元為止)可以容許有無效輸入。大小寫視為相同。
+
+例：
+
+>$a     How are you?
+此指令等同$a (How are you是無效輸入)
+
+> $ a  How are you?
+此指令等同$，就算後面有個'a'也沒用(雖然a是個合法的指令，但$也是合法指令，所以a在此會被視為是無效輸入)
+
+>z $ How are you? 
+此指令等同'$'，因為z不是合法指令
+
+>10P  ← 印出第10行
+>nb   .p ← 建立一個名為".p"的buffer
+換句話說，基本精神是：
+
+系統會試著盡量往右"抓"，直到「所抓到的token(不含white space)合乎指令的要求」。若到了line-enter而所抓到的還不是個指令，就是無效指令。
+
+如果抓到一個指令，則視該指令之後是否有其他輸入(arguments)來決定後面的輸入是否是有效輸入。
+錯誤訊息優先順序從上至下:
+
+如果指令之中有牽涉到line-number，而line-number又超出目前「工作buffer」之中的行數，就給error message => Error : Line number out of range! Please try again.
+如果要'c', 'd', or 'p'而目前的「工作buffer」是空的，就給error message => Error : There is no data! Please try again.
+如果有牽涉到buffer名稱而沒有使用者所說的那個buffer，就給error message => Error : There is no such buffer! Please try again.
+如果需要buffer名稱而沒有提供名稱，就給error message => Error : buffer name cannot be empty! Please try again.
+任何其他的error，就給error message => Error : Illegal command! Please try again.
+至於使用者所輸入的"文章內容"，系統是"來者不拒！照單全收！"，直到使用者輸入一個「只有.的一行」為止。「只有'.'的一行」是"輸入的文章(段落)至此結束"的意思。「只有'.'的一行」本身不算作是輸入的文章(段落)的一部份。
+
+若是「那一行」除了.之外還有任何其他東西(例如space字元，不管是在.前或.後)，那麼「那一行」就會被當作是輸入的文章(段落)的一部份，使用者必須另行輸入一個「只有.的一行」才能真正結束文章(段落)的輸入。也就是說，使用者使用本line-editor來編輯文章時是無法輸入一個「只有'.'的一行」的。這是本line-editor的一項缺點，不過應還可以忍受。
+
+程式怎麼寫
+基本上，希望只是extend上週的程式，而extend的方式是盡量加程式碼，盡量不更動已有的程式碼(而且最好整個class都不要動)。這是物件導向設計的一個原則，叫做Open-Close Principle。
+
+程式碼怎麼加？ 我們可以分三階段來看。
+
+※ 第一階段： allow the change of "current line"
+
+23 : 列印第23行的內容，同時把第23行設定為「目前這一行」 . : 列印「目前這一行是哪一行」(line number)
+
+首先，原本的指令邏輯(a、i、d、c)都沒有改變，重寫也是沒必要的，所以應該要利用上周寫好的Buffer class。但如果不想修改Buffer class要怎麼增加新功能？
+
+這就是物件導向設計的威力了：利用繼承(inheritance)。所以你可以寫一個BufferPro class去繼承Buffer class，這樣的好處是，原本的Add()、Delete()等都不用重寫可直接利用，然後再加入 '23' 與 '$' 與 '.' 的概念(於BufferPro中)，以允許使用者直接指定「目前這一行」是哪一行。(同時也列印(指定後的)「目前這一行」)。例如：
+
+class BufferPro: public Buffer {
+ public:
+  BufferPro() {}
+  SwitchToLine(int line) {
+    current_line = line;
+    Print();  // 繼承而來的member function
+  }
+  SwitchToLastLine() {...}
+  PrintCurrentLineNo() {...}
+};
+一個小問題是，如果你原本的Buffer class中的data member/member function是設定成private，那他們將無法被繼承。所以current_line等private member要被修改成protected member後BufferPro才看的到。這是一個小小的缺點，不過如果當初(上周)你在設計時就有想到可能會需要用到繼承，那你應該會直接把這些data member設計成protected。
+
+如果不想用繼承，其實還有另一種有趣的作法，請看：
+
+class BufferPro {
+ private:
+   Buffer b;
+ public:
+  BufferPro() {}
+  Add() { b.Add(); }
+  Insert() { b.Insert(); }
+  SwitchToLine(int line) {
+    b.setCurrentLine(line);
+    b.Print(); 
+  }
+  SwitchToLastLine() {...}
+  PrintCurrentLineNo() {...}
+};
+你有發現箇中奧妙嗎？
+
+(當然，主程式應要做相對應的修改以配合新的BufferPro的運作)
+
+※ 第二階段：allow the change of "current buffer"
+
+Line editor pro中會有多個BufferPro instances，而我們(主程式)永遠只與其中之一打交道(姑且稱之為current_buffer)。一開始只有一個BufferPro instance，但漸漸地就會有好幾個BufferPro的instances出現。要用什麼來存放這些BufferPro instances？當然是用(一個)vector (instance)囉！(It is a good idea any way.)
+
+"主程式"自己是負責與使用者的互動，current_buffer該做什麼事，主程式反正叫它去做就對了。
+
+不過，話又說回來...
+各位也可以考慮加一個Editor class。 主程式只需要跟這Editor class的(唯一)instance打交道就好，讓這Editor instance (姑且稱之為editor)去管理這些BufferPro instances (包括current_buffer)。此外，Editor應該還需要知道「現在該處理buffer還是現在該處理資料」，例如你拿到的指令是nb，那要處理的是buffer，如果拿到的指令是.p，那就是對現在的工作buffer下達「列印」的行為。
+
+這樣可以有效減輕主程式的負擔：它只要專注於「"收"使用者的input」+「分析使用者的input」就好，一旦主程式搞清楚使用者要的是什麼，就直接叫editor去做。(而editor怎麼做？那是它家的事！)
+
+※ 第三階段：User input的分析
+
+一旦完成第一階段與第二階段，就可進行第三階段：分析使用者的input。 而這恐怕必須由主程式來做。(亦即：「分析使用者的input」看來應該是主程式的責任。) 但實際上，你也可以再開一個class來做(姑且稱之為Parser)。這樣主程式更輕鬆了：
+
+int main() {
+  Parser pr;
+  Editor ed;
+  std::string cmd;
+  cmd = pr.ParseCmd();
+  while ( cmd.compare("q") != 0 ) {
+    ed.RunCmd(cmd);
+    pr.ParseCmd();
+  }
+}
+上述的程式碼只是概念，因為實際上一行指令的輸入不是只有指令本身而已，有些會帶arguments。例如，nb Buffer1那個Buffer1就是argument。而editor是需要知道argument的。而23p這種其實也可以把它想成是指令p然後argument是23。
+
+一旦把「主程式該做什麼」、「Editor該做什麼」、「Buffer該做什麼」、「三者之間的關係又是什麼」界定清楚，各位就可以依照以上「三階段動工」的規劃開始動工了。
+
+Good luck, and have fun！
+
+本周的測試規劃是這樣的：
+我們先用一題測試「變動目前這一行的指令以及原有line editor的指令」，然後再用一題測試「新增加的buffer指令」，最後用一題測試「所有狀況」。
+
+     Welcome to use CYCUICE editor...
+     > a
+     Four score and seven years ago, our fathers brought forth, upon this continent,
+     .
+     > p
+     Four score and seven years ago, our fathers brought forth, upon this continent,
+     > $a
+     a new nation, conceived in Liberty, and dedicated to the proposition that all men
+     .
+     > 1p
+     Four score and seven years ago, our fathers brought forth, upon this continent,
+     > .
+     you're on line 2.
+     > a
+     are created equal.
+     .
+     > 1
+     1: Four score and seven years ago, our fathers brought forth, upon this continent,
+     > .
+     you're on line 1.
+     > 3c
+     are created equal.  Now we are engaged in a great civil war ...
+     .
+     > .
+     you're on line 3.
+     > lb
+     Buffer-0 3  ← 3表示這個buffer總共有3 lines
+     > b
+     Buffer-0 3
+     > rb Article
+     > b
+     Article 3
+     > nb Program
+     > lb
+     Article 3
+     Program 0
+     > b
+     Program 0
+     > cb Article
+     > b
+     Article 3
+     > cb Program
+     > .
+     Error : There is no data! Please try again.
+     > a
+     int x ;
+     int F(int y) {
+       y = x + 1 ;
+     } // F()
+     .
+     > $
+     4 : } // F()
+     > q
+     Thank you for using CYCUICE editor!
+
+
+
+
+     當輸入為 : 
+a
+Now we are engaged in a great civil war
+testing whether that nation
+or any nation
+.
+.
+1
+lb
+rb NewName
+b
+%p
+.
+i
+conceived in Liberty
+and dedicated to the proposition that all men are created equal.
+  .
+.
+$
+.
+1
+.
+i
+Four score and seven years ago
+our fathers brought
+.
+q
+
+
+
+當輸入為 : 
+lb i Hello! World! Good bye! Yesterday! Hi! Tomorrow! . lb b Nonsense nb Gettysberg lb b i Now we are engaged in a great civil war testing whether that nation
+or any nation
+or any nation
+.
+.
+nb
+1
+.
+%p
+.
+i
+conceived in Liberty
+and dedicated to the proposition that all men are created equal.
+.
+nb
+%p
+nb
+cb Buffer-1
+%p
+nb
+rb
+b
+lb
+q
+你的輸出 : 
+Welcome to use CYCUICE editor...
+You're on line 2.
+Error : Line number out of range! Please try again.
+Error : Illegal command! Please try again.
+You're on line 0.
+Error : There is no data! Please try again.
+You're on line 0.
+Error : There is no data! Please try again.
+Error : Line number out of range! Please try again.
+Error : Illegal command! Please try again.
+Error : There is no data! Please try again.
+Error : buffer name cannot be empty! Please try again.
+buffer 0
+Buffer-0 2
+buffer 2
+buffer 0
+buffer 0
+buffer 0
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
+正確輸出 : 
+Welcome to use CYCUICE editor...
+Buffer-0 0
+Error : Illegal command! Please try again.
+Error : Illegal command! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : Line number out of range! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+1: conceived in Liberty
+2: and dedicated to the proposition that all men are created equal.
+Error : buffer name cannot be empty! Please try again.
+Buffer-4 0
+Buffer-0 0
+Buffer-1 2
+Buffer-2 0
+Buffer-3 0
+Buffer-4 0
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
+
+
+
+當輸入為 : 
+lb i Hello! World! Good bye! Yesterday! Hi! Tomorrow! . lb b Nonsense nb Gettysberg lb b i Now we are engaged in a great civil war testing whether that nation
+or any nation
+or any nation
+.
+.
+nb
+1
+.
+%p
+.
+i
+conceived in Liberty
+and dedicated to the proposition that all men are created equal.
+.
+nb
+%p
+nb
+cb Buffer-1
+%p
+nb
+rb
+b
+lb
+q
+你的輸出 : 
+Welcome to use CYCUICE editor...
+Buffer-0 0
+Error : Illegal command! Please try again.
+Error : Illegal command! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : Line number out of range! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+1: conceived in Liberty
+2: and dedicated to the proposition that all men are created equal.
+Error : buffer name cannot be empty! Please try again.
+Buffer-2 0
+Buffer-0 0
+Buffer-1 2
+Buffer-2 0
+Buffer-3 0
+Buffer-4 0
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
+正確輸出 : 
+Welcome to use CYCUICE editor...
+Buffer-0 0
+Error : Illegal command! Please try again.
+Error : Illegal command! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : Line number out of range! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+Error : There is no data! Please try again.
+1: conceived in Liberty
+2: and dedicated to the proposition that all men are created equal.
+Error : buffer name cannot be empty! Please try again.
+Buffer-4 0
+Buffer-0 0
+Buffer-1 2
+Buffer-2 0
+Buffer-3 0
+Buffer-4 0
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
+
+當輸入為 : 
+nb Apple
+nb
+nb Banana
+lb
+cb Cherry
+nb  Cherry
+db Banana
+db
+b
+cb  Buffer-0
+db
+db
+db
+q
+
+你的輸出 : 
+Welcome to use CYCUICE editor...
+Buffer-0 0
+Apple 0
+Buffer-2 0
+Banana 0
+Error : There is no such buffer! Please try again.
+Buffer-2 0
+Error : There is no such buffer! Please try again.
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
+正確輸出 : 
+Welcome to use CYCUICE editor...
+Buffer-0 0
+Apple 0
+Buffer-2 0
+Banana 0
+Error : There is no such buffer! Please try again.
+Buffer-2 0
+Error : Illegal command! Please try again.
+Thank you for using CYCUICE editor!
+
+----------------------輸出不包含此行虛線
